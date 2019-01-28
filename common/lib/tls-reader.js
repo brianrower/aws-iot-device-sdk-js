@@ -23,6 +23,16 @@ var isUndefined = require('./is-undefined');
 var exceptions = require('./exceptions');
 
 //begin module
+function readFromBufferOrFile(option, throwOnMissing) {
+   if (Buffer.isBuffer(option)) {
+      return option;
+   } else if (filesys.existsSync(option)) {
+         return filesys.readFileSync(option);
+   } else {
+      throw new Error(throwOnMissing);
+   }
+}
+
 /**
  * This method is the exposed module; it validates and prepares the tls
  * options as required for connection to the AWS IoT service.
@@ -50,56 +60,25 @@ module.exports = function(options) {
    // that the AWS Console generates a JSON configuration document for.
    //
    if (!isUndefined(options.caCert)) {
-      if (Buffer.isBuffer(options.caCert)) {
-         options.ca = options.caCert;
-      } else {
-         if (filesys.existsSync(options.caCert)) {
-            options.ca = filesys.readFileSync(options.caCert);
-         } else {
-            throw new Error(exceptions.INVALID_CA_CERT_OPTION);
-         }
-      }
+      options.ca = readFromBufferOrFile(options.caCert, exceptions.INVALID_CA_CERT_OPTION);
    }
    if (!isUndefined(options.privateKey)) {
-      if (Buffer.isBuffer(options.privateKey)) {
-         options.key = options.privateKey;
-      } else {
-         if (filesys.existsSync(options.privateKey)) {
-            options.key = filesys.readFileSync(options.privateKey);
-         } else {
-            throw new Error(exceptions.INVALID_PRIVATE_KEY_OPTION);
-         }
-      }
+      options.key = readFromBufferOrFile(options.privateKey, exceptions.INVALID_PRIVATE_KEY_OPTION);
    }
    if (!isUndefined(options.clientCert)) {
-      if (Buffer.isBuffer(options.clientCert)) {
-         options.cert = options.clientCert;
-      } else {
-         if (filesys.existsSync(options.clientCert)) {
-            options.cert = filesys.readFileSync(options.clientCert);
-         } else {
-            throw new Error(exceptions.INVALID_CLIENT_CERT_OPTION);
-         }
-      }
+      options.cert = readFromBufferOrFile(options.clientCert, exceptions.INVALID_CLIENT_CERT_OPTION);
    }
 
    // Parse PEM files.  Options ending in 'Path' must be files
    // and will override options which do not end in 'Path'.
-
-   if (filesys.existsSync(options.keyPath)) {
-      options.key = filesys.readFileSync(options.keyPath);
-   } else if (!isUndefined(options.keyPath)) {
-      throw new Error(exceptions.INVALID_KEY_PATH_OPTION);
+   if (!isUndefined(options.keyPath)) {
+      options.key = readFromBufferOrFile(options.keyPath, exceptions.INVALID_KEY_PATH_OPTION);
    }
-   if (filesys.existsSync(options.certPath)) {
-      options.cert = filesys.readFileSync(options.certPath);
-   } else if (!isUndefined(options.certPath)) {
-      throw new Error(exceptions.INVALID_CERT_PATH_OPTION);
+   if (!isUndefined(options.certPath)) {
+      options.cert = readFromBufferOrFile(options.certPath, exceptions.INVALID_CERT_PATH_OPTION);
    }
-   if (filesys.existsSync(options.caPath)) {
-      options.ca = filesys.readFileSync(options.caPath);
-   } else if (!isUndefined(options.caPath)) {
-      throw new Error(exceptions.INVALID_CA_PATH_OPTION);
+   if (!isUndefined(options.caPath)) {
+      options.ca = readFromBufferOrFile(options.caPath, exceptions.INVALID_CA_PATH_OPTION);
    }
 
    // request certificate from partner
