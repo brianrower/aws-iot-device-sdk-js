@@ -27,7 +27,7 @@ function readFromBufferOrFile(option, throwOnMissing) {
    if (Buffer.isBuffer(option)) {
       return option;
    } else if (filesys.existsSync(option)) {
-         return filesys.readFileSync(option);
+      return filesys.readFileSync(option);
    } else {
       throw new Error(throwOnMissing);
    }
